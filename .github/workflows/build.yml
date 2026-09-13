@@ -8,6 +8,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write   # needed for softprops/action-gh-release on tag pushes
+
 jobs:
   build:
     strategy:
