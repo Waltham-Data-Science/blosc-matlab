@@ -105,14 +105,18 @@ function name = pickAssetName()
         case 'mexmaci64'
             name = 'blosc-matlab-macos-x64.tar.gz';
         case 'mexa64'
-            % Linux; distinguish x64 vs arm64 by MATLAB's own probe.
+            % Linux; only x64 prebuilds are shipped for now. Linux
+            % arm64 requires a source build (`build`) until
+            % matlab-actions/setup-matlab grows arm support.
             arch = computer('arch');
             if contains(lower(arch), 'aarch64') || ...
                contains(lower(arch), 'arm')
-                name = 'blosc-matlab-linux-arm64.tar.gz';
-            else
-                name = 'blosc-matlab-linux-x64.tar.gz';
+                error('blosc_matlab:install:UnknownPlatform', ...
+                    ['No prebuilt available for Linux arm64. Run ' ...
+                     '`build` from the repo root to compile from ' ...
+                     'source (needs a C compiler and CMake).']);
             end
+            name = 'blosc-matlab-linux-x64.tar.gz';
         case 'mexw64'
             name = 'blosc-matlab-windows-x64.tar.gz';
         otherwise

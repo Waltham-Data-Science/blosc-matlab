@@ -26,9 +26,14 @@ jobs:
           - os: ubuntu-24.04
             mexext: mexa64
             asset: blosc-matlab-linux-x64
-          - os: ubuntu-24.04-arm
-            mexext: mexa64
-            asset: blosc-matlab-linux-arm64
+          # Linux arm64 is disabled: matlab-actions/setup-matlab@v2 does
+          # not yet support linux arm runners ("Error: This action is
+          # not supported on linux runners using the arm64
+          # architecture."). Users on ARM Linux can `build` locally from
+          # source; re-add this row once setup-matlab grows arm support.
+          # - os: ubuntu-24.04-arm
+          #   mexext: mexa64
+          #   asset: blosc-matlab-linux-arm64
           - os: windows-2022
             mexext: mexw64
             asset: blosc-matlab-windows-x64

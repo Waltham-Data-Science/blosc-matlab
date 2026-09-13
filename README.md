@@ -26,7 +26,7 @@ ans =
     codecs: {'blosclz', 'lz4', 'lz4hc', 'zlib', 'zstd'}
 ```
 
-Prebuilt targets: **macOS Apple Silicon**, **macOS Intel**, **Linux x64**, **Linux arm64**, **Windows x64**.
+Prebuilt targets: **macOS Apple Silicon**, **macOS Intel**, **Linux x64**, **Windows x64**. Linux arm64 currently requires a source build via `build` (see below) — the `matlab-actions/setup-matlab` action doesn't yet ship MATLAB for that architecture.
 
 **Pin a version** if you want reproducibility:
 
