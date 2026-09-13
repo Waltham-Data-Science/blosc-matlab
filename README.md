@@ -70,6 +70,15 @@ decoded    = blosc.decodeMany(containers);
 
 % Peek at a container without decoding
 h = blosc.header(container);   % .cname .clevel .typesize .nbytes .cbytes
+
+% Full chunk: pad + axis-order transpose (Fortran -> C) + typecast +
+% encode in one MEX call, no intermediate MATLAB allocations. Byte-
+% for-byte identical to numpy.transpose(tile).tobytes() + Blosc.encode.
+container = blosc.encodeChunk(tile, [128 128 128], ...
+    'cname', 'zstd', 'clevel', 9);
+
+back = blosc.decodeChunk(container, [128 128 128], 'uint16');
+isequal(back, tile)     % true
 ```
 
 ## Codecs
