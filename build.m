@@ -50,23 +50,34 @@ function build(options)
         shellQuote(buildDir));
     runShell(buildCmd);
 
-    % Find the static library. Location varies slightly by generator.
-    libCandidates = {
-        fullfile(buildDir, 'blosc', 'libblosc.a'), ...
-        fullfile(buildDir, 'blosc', 'Release', 'blosc.lib'), ...
-        fullfile(buildDir, 'blosc', 'blosc.lib') ...
+    % Find the static library. Location and file name vary by
+    % generator: unix drops libblosc.a next to the source, MSVC's
+    % multi-config generator drops libblosc.lib into a Release/ or
+    % Debug/ subdir, and older single-config Windows generators drop
+    % blosc.lib (no lib prefix) directly. Cover all of them.
+    libSearchDirs = { ...
+        fullfile(buildDir, 'blosc'), ...
+        fullfile(buildDir, 'blosc', 'Release'), ...
+        fullfile(buildDir, 'blosc', 'Debug') ...
     };
+    libSearchNames = {'libblosc.a', 'libblosc.lib', 'blosc.lib'};
     libPath = '';
-    for i = 1:numel(libCandidates)
-        if isfile(libCandidates{i})
-            libPath = libCandidates{i};
-            break;
+    tried = {};
+    for i = 1:numel(libSearchDirs)
+        for j = 1:numel(libSearchNames)
+            candidate = fullfile(libSearchDirs{i}, libSearchNames{j});
+            tried{end+1} = candidate; %#ok<AGROW>
+            if isfile(candidate)
+                libPath = candidate;
+                break;
+            end
         end
+        if ~isempty(libPath), break; end
     end
     if isempty(libPath)
         error('blosc_matlab:build:LibMissing', ...
             'Could not find libblosc after building. Looked in:\n%s', ...
-            strjoin(libCandidates, '\n'));
+            strjoin(tried, '\n'));
     end
 
     % Include dirs: the public blosc/ header plus the sub-headers c-blosc
