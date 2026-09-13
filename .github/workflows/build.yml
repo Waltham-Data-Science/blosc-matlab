@@ -1,0 +1,78 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            mexext: mexmaca64
+            asset: matlab-blosc-macos-arm64
+          - os: macos-13
+            mexext: mexmaci64
+            asset: matlab-blosc-macos-x64
+          - os: ubuntu-24.04
+            mexext: mexa64
+            asset: matlab-blosc-linux-x64
+          - os: ubuntu-24.04-arm
+            mexext: mexa64
+            asset: matlab-blosc-linux-arm64
+          - os: windows-2022
+            mexext: mexw64
+            asset: matlab-blosc-windows-x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: R2024a
+
+      - name: Build the MEX
+        uses: matlab-actions/run-command@v2
+        with:
+          command: build
+
+      - name: Run tests
+        uses: matlab-actions/run-command@v2
+        with:
+          command: |
+            results = runtests('tests', 'IncludeSubfolders', true);
+            assertSuccess(results);
+
+      - name: Stage release payload
+        shell: bash
+        run: |
+          mkdir -p release/matlab-blosc/+blosc/private
+          cp -r +blosc release/matlab-blosc/
+          cp LICENSE README.md release/matlab-blosc/
+          cp LICENSE-C-BLOSC release/matlab-blosc/ 2>/dev/null || true
+          cd release
+          tar czf ${{ matrix.asset }}.tar.gz matlab-blosc
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: release/${{ matrix.asset }}.tar.gz
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/${{ matrix.asset }}.tar.gz

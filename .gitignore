@@ -1,0 +1,18 @@
+# MEX build outputs
++blosc/private/blosc_mex.mexmaca64
++blosc/private/blosc_mex.mexmaci64
++blosc/private/blosc_mex.mexa64
++blosc/private/blosc_mex.mexw64
+
+# CMake build tree
+build_c_blosc/
+c-blosc-build/
+
+# Common junk
+.DS_Store
+*.o
+*.obj
+*.pdb
+*.exp
+*.lib
+*.a
