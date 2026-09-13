@@ -84,7 +84,7 @@ classdef TestBloscRoundtrip < matlab.unittest.TestCase
             bytes = uint8(1:11);
             testCase.verifyError( ...
                 @() blosc.encode(bytes, 'typesize', 2), ...
-                'matlab_blosc:encode:LengthMismatch');
+                'blosc_matlab:encode:LengthMismatch');
         end
 
         function testVersionReports(testCase)

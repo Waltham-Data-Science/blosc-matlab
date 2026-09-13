@@ -1,4 +1,4 @@
-# matlab-blosc
+# blosc-matlab
 
 MATLAB MEX bindings for [Blosc v1](https://github.com/Blosc/c-blosc). Compresses and decompresses byte arrays with the same container format as Python's [numcodecs.Blosc](https://numcodecs.readthedocs.io/en/stable/blosc.html), so a chunk written by NumPy/Zarr on one side round-trips on the other.
 
@@ -16,7 +16,7 @@ One line in MATLAB. Clone the repo (or just download the top-level MATLAB files)
 install
 ```
 
-`install.m` detects your platform (`mexext` + `computer`), fetches the matching prebuilt from the [latest GitHub release](https://github.com/Waltham-Data-Science/matlab-blosc/releases/latest), drops the MEX file into `+blosc/private/`, and adds the package to your path. Idempotent — running it again is a no-op unless you pass `'Force', true`.
+`install.m` detects your platform (`mexext` + `computer`), fetches the matching prebuilt from the [latest GitHub release](https://github.com/Waltham-Data-Science/blosc-matlab/releases/latest), drops the MEX file into `+blosc/private/`, and adds the package to your path. Idempotent — running it again is a no-op unless you pass `'Force', true`.
 
 ```matlab
 >> blosc.version()
@@ -37,13 +37,13 @@ install('Version', 'v0.2.0')
 **Build from source** (needs a C compiler and CMake) — for platforms without a prebuilt or for local development:
 
 ```bash
-git clone --recursive https://github.com/Waltham-Data-Science/matlab-blosc
+git clone --recursive https://github.com/Waltham-Data-Science/blosc-matlab
 ```
 
 then in MATLAB:
 
 ```matlab
-cd /path/to/matlab-blosc
+cd /path/to/blosc-matlab
 build   % compiles src/blosc_mex.c against the vendored c-blosc
 ```
 

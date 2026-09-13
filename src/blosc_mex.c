@@ -44,7 +44,7 @@
 
 static const char *readCharArg(const mxArray *a, const char *argName) {
     if (!mxIsChar(a) || mxGetM(a) != 1) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadArg",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadArg",
             "%s must be a char row.", argName);
     }
     /* mxArrayToString allocs; we release with mxFree via caller pattern
@@ -55,7 +55,7 @@ static const char *readCharArg(const mxArray *a, const char *argName) {
 
 static int readInt32Arg(const mxArray *a, const char *argName) {
     if (!mxIsNumeric(a) || mxGetNumberOfElements(a) != 1) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadArg",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadArg",
             "%s must be a scalar integer.", argName);
     }
     return (int)mxGetScalar(a);
@@ -64,7 +64,7 @@ static int readInt32Arg(const mxArray *a, const char *argName) {
 static const uint8_t *readByteArg(const mxArray *a, size_t *nOut,
                                   const char *argName) {
     if (!mxIsUint8(a)) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadArg",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadArg",
             "%s must be uint8.", argName);
     }
     *nOut = mxGetNumberOfElements(a);
@@ -84,7 +84,7 @@ static mxArray *bytesToMx(const uint8_t *bytes, size_t n) {
 static void doEncode(int nrhs, const mxArray *prhs[],
                      int nlhs, mxArray *plhs[]) {
     if (nrhs != 7) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadArgs",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadArgs",
             "encode: expected 6 arguments after the verb "
             "(rawBytes, cname, clevel, shuffle, typesize, blocksize).");
     }
@@ -97,11 +97,11 @@ static void doEncode(int nrhs, const mxArray *prhs[],
     int blocksize = readInt32Arg(prhs[6], "blocksize");
 
     if (typesize < 1) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadTypesize",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadTypesize",
             "typesize must be >= 1, got %d.", typesize);
     }
     if (nSrc % (size_t)typesize != 0) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:LengthMismatch",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:LengthMismatch",
             "Input length %zu is not a multiple of typesize %d.",
             nSrc, typesize);
     }
@@ -117,7 +117,7 @@ static void doEncode(int nrhs, const mxArray *prhs[],
 
     if (rc < 0) {
         mxFree(dst);
-        mexErrMsgIdAndTxt("matlab_blosc:mex:CompressFailed",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:CompressFailed",
             "blosc_compress_ctx returned %d.", rc);
     }
 
@@ -128,7 +128,7 @@ static void doEncode(int nrhs, const mxArray *prhs[],
 static void doDecode(int nrhs, const mxArray *prhs[],
                      int nlhs, mxArray *plhs[]) {
     if (nrhs != 2) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadArgs",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadArgs",
             "decode: expected 1 argument after the verb (container).");
     }
     size_t nSrc;
@@ -139,7 +139,7 @@ static void doDecode(int nrhs, const mxArray *prhs[],
     size_t nbytes = 0, cbytes = 0, blocksize = 0;
     blosc_cbuffer_sizes(src, &nbytes, &cbytes, &blocksize);
     if (cbytes == 0 || cbytes > nSrc) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadContainer",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadContainer",
             "Container header says cbytes=%zu, buffer has %zu bytes.",
             cbytes, nSrc);
     }
@@ -148,7 +148,7 @@ static void doDecode(int nrhs, const mxArray *prhs[],
     int rc = blosc_decompress_ctx(src, dst, nbytes, 1 /* nthreads */);
     if (rc < 0) {
         mxFree(dst);
-        mexErrMsgIdAndTxt("matlab_blosc:mex:DecompressFailed",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:DecompressFailed",
             "blosc_decompress_ctx returned %d.", rc);
     }
 
@@ -159,13 +159,13 @@ static void doDecode(int nrhs, const mxArray *prhs[],
 static void doHeader(int nrhs, const mxArray *prhs[],
                      int nlhs, mxArray *plhs[]) {
     if (nrhs != 2) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadArgs",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadArgs",
             "header: expected 1 argument after the verb (container).");
     }
     size_t nSrc;
     const uint8_t *src = readByteArg(prhs[1], &nSrc, "container");
     if (nSrc < 16) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadContainer",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadContainer",
             "Container must be at least 16 bytes (header).");
     }
 
@@ -259,7 +259,7 @@ static void doVersion(int nrhs, const mxArray *prhs[],
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[]) {
     if (nrhs < 1) {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:BadArgs",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:BadArgs",
             "Usage: blosc_mex(verb, ...). Verbs: encode, decode, "
             "header, version.");
     }
@@ -274,7 +274,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     } else if (strcmp(verb, "version") == 0) {
         doVersion(nrhs, prhs, nlhs, plhs);
     } else {
-        mexErrMsgIdAndTxt("matlab_blosc:mex:UnknownVerb",
+        mexErrMsgIdAndTxt("blosc_matlab:mex:UnknownVerb",
             "Unknown verb '%s'.", verb);
     }
 }

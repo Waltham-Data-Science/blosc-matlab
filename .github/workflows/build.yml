@@ -16,19 +16,19 @@ jobs:
         include:
           - os: macos-14
             mexext: mexmaca64
-            asset: matlab-blosc-macos-arm64
+            asset: blosc-matlab-macos-arm64
           - os: macos-13
             mexext: mexmaci64
-            asset: matlab-blosc-macos-x64
+            asset: blosc-matlab-macos-x64
           - os: ubuntu-24.04
             mexext: mexa64
-            asset: matlab-blosc-linux-x64
+            asset: blosc-matlab-linux-x64
           - os: ubuntu-24.04-arm
             mexext: mexa64
-            asset: matlab-blosc-linux-arm64
+            asset: blosc-matlab-linux-arm64
           - os: windows-2022
             mexext: mexw64
-            asset: matlab-blosc-windows-x64
+            asset: blosc-matlab-windows-x64
 
     runs-on: ${{ matrix.os }}
 
@@ -58,12 +58,12 @@ jobs:
       - name: Stage release payload
         shell: bash
         run: |
-          mkdir -p release/matlab-blosc/+blosc/private
-          cp -r +blosc release/matlab-blosc/
-          cp LICENSE README.md release/matlab-blosc/
-          cp LICENSE-C-BLOSC release/matlab-blosc/ 2>/dev/null || true
+          mkdir -p release/blosc-matlab/+blosc/private
+          cp -r +blosc release/blosc-matlab/
+          cp LICENSE README.md release/blosc-matlab/
+          cp LICENSE-C-BLOSC release/blosc-matlab/ 2>/dev/null || true
           cd release
-          tar czf ${{ matrix.asset }}.tar.gz matlab-blosc
+          tar czf ${{ matrix.asset }}.tar.gz blosc-matlab
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

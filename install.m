@@ -2,7 +2,7 @@ function install(options)
 %INSTALL Download the platform-appropriate MEX from GitHub Releases.
 %
 %   INSTALL() figures out which platform MATLAB is running on, picks
-%   the matching prebuilt asset from the latest matlab-blosc release,
+%   the matching prebuilt asset from the latest blosc-matlab release,
 %   downloads it, and drops the MEX file into +blosc/private/.
 %
 %   Options:
@@ -11,7 +11,7 @@ function install(options)
 %     'Force'   - logical, if true reinstall even when a MEX file is
 %                 already present; default false.
 %     'Repo'    - char, override the source repo. Default
-%                 'Waltham-Data-Science/matlab-blosc'.
+%                 'Waltham-Data-Science/blosc-matlab'.
 %
 %   Examples:
 %       install                           % latest, skip if present
@@ -24,12 +24,12 @@ function install(options)
 %
 %   If your platform is missing from the release assets, either run
 %   BUILD locally (needs a C compiler and CMake) or open an issue at
-%   https://github.com/Waltham-Data-Science/matlab-blosc/issues .
+%   https://github.com/Waltham-Data-Science/blosc-matlab/issues .
 
     arguments
         options.Version (1,:) char = 'latest'
         options.Force (1,1) logical = false
-        options.Repo (1,:) char = 'Waltham-Data-Science/matlab-blosc'
+        options.Repo (1,:) char = 'Waltham-Data-Science/blosc-matlab'
     end
 
     here = fileparts(mfilename('fullpath'));
@@ -53,7 +53,7 @@ function install(options)
             options.Repo, options.Version, assetName);
     end
 
-    tmpDir = fullfile(tempdir, ['matlab-blosc-install-' char(matlab.lang.internal.uuid())]);
+    tmpDir = fullfile(tempdir, ['blosc-matlab-install-' char(matlab.lang.internal.uuid())]);
     mkdir(tmpDir);
     cleaner = onCleanup(@() safeRmdir(tmpDir));
 
@@ -62,7 +62,7 @@ function install(options)
     try
         websave(localTar, url);
     catch ME
-        error('matlab_blosc:install:DownloadFailed', ...
+        error('blosc_matlab:install:DownloadFailed', ...
             ['Could not fetch %s\n  %s\n\nThe most common cause is ' ...
              'that no release with that tag/asset exists yet. See ' ...
              'https://github.com/%s/releases .'], ...
@@ -74,10 +74,10 @@ function install(options)
     mkdir(extractDir);
     untar(localTar, extractDir);
 
-    % The tarball layout is release/matlab-blosc/+blosc/private/blosc_mex.<ext>
+    % The tarball layout is release/blosc-matlab/+blosc/private/blosc_mex.<ext>
     hits = dir(fullfile(extractDir, '**', ['blosc_mex.' mexext]));
     if isempty(hits)
-        error('matlab_blosc:install:AssetMissing', ...
+        error('blosc_matlab:install:AssetMissing', ...
             'Downloaded %s but it does not contain blosc_mex.%s .', ...
             assetName, mexext);
     end
@@ -91,7 +91,7 @@ function install(options)
         fprintf('  blosc %s, codecs: %s\n', info.blosc, ...
             strjoin(info.codecs, ', '));
     catch ME
-        warning('matlab_blosc:install:SmokeFailed', ...
+        warning('blosc_matlab:install:SmokeFailed', ...
             'MEX installed but blosc.version() failed: %s', ME.message);
     end
 end
@@ -101,23 +101,23 @@ function name = pickAssetName()
     mex = mexext;
     switch mex
         case 'mexmaca64'
-            name = 'matlab-blosc-macos-arm64.tar.gz';
+            name = 'blosc-matlab-macos-arm64.tar.gz';
         case 'mexmaci64'
-            name = 'matlab-blosc-macos-x64.tar.gz';
+            name = 'blosc-matlab-macos-x64.tar.gz';
         case 'mexa64'
             % Linux; distinguish x64 vs arm64 by MATLAB's own probe.
             arch = computer('arch');
             if contains(lower(arch), 'aarch64') || ...
                contains(lower(arch), 'arm')
-                name = 'matlab-blosc-linux-arm64.tar.gz';
+                name = 'blosc-matlab-linux-arm64.tar.gz';
             else
-                name = 'matlab-blosc-linux-x64.tar.gz';
+                name = 'blosc-matlab-linux-x64.tar.gz';
             end
         case 'mexw64'
-            name = 'matlab-blosc-windows-x64.tar.gz';
+            name = 'blosc-matlab-windows-x64.tar.gz';
         otherwise
-            error('matlab_blosc:install:UnknownPlatform', ...
-                ['This MATLAB reports mexext=%s, which matlab-blosc ' ...
+            error('blosc_matlab:install:UnknownPlatform', ...
+                ['This MATLAB reports mexext=%s, which blosc-matlab ' ...
                  'does not ship a prebuilt for. Options: run BUILD ' ...
                  'from source, or open an issue.'], mex);
     end
