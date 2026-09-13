@@ -195,8 +195,10 @@ static void doHeader(int nrhs, const mxArray *prhs[],
         clevel = (int)src[15];
     }
 
-    const char *cname = blosc_get_compressor_from_id(complib);
-    if (cname == NULL) cname = "unknown";
+    const char *cname = NULL;
+    if (blosc_compcode_to_compname(complib, &cname) < 0 || cname == NULL) {
+        cname = "unknown";
+    }
 
     const char *fields[] = {"cname", "clevel", "shuffle", "typesize",
                             "nbytes", "cbytes", "blocksize"};
@@ -220,14 +222,12 @@ static void doVersion(int nrhs, const mxArray *prhs[],
 
     char codecs[512];
     codecs[0] = '\0';
-    int n = blosc_list_compressors_len();
     /* blosc_list_compressors returns a comma-separated char*. */
     const char *list = blosc_list_compressors();
     if (list) {
         strncpy(codecs, list, sizeof(codecs) - 1);
         codecs[sizeof(codecs) - 1] = '\0';
     }
-    (void)n;
 
     /* Split codecs on comma into a MATLAB cellstr. */
     int nCodecs = 0;
