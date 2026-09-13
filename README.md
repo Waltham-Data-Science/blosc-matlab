@@ -26,7 +26,10 @@ ans =
     codecs: {'blosclz', 'lz4', 'lz4hc', 'zlib', 'zstd'}
 ```
 
-Prebuilt targets: **macOS Apple Silicon**, **macOS Intel**, **Linux x64**, **Windows x64**. Linux arm64 currently requires a source build via `build` (see below) — the `matlab-actions/setup-matlab` action doesn't yet ship MATLAB for that architecture.
+Prebuilt targets: **macOS Apple Silicon**, **Linux x64**, **Windows x64**. Two platforms currently require a source build via `build` (see below):
+
+- **macOS Intel** — GitHub is retiring the `macos-13` runner (their only Intel image), so we no longer attach a `mexmaci64` prebuilt. Intel Mac users compile from source; we may add a Rosetta-based Intel lane on the Apple Silicon runner if demand appears.
+- **Linux arm64** — `matlab-actions/setup-matlab` does not yet support Linux arm runners.
 
 **Pin a version** if you want reproducibility:
 

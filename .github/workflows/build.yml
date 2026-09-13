@@ -20,9 +20,16 @@ jobs:
           - os: macos-14
             mexext: mexmaca64
             asset: blosc-matlab-macos-arm64
-          - os: macos-13
-            mexext: mexmaci64
-            asset: blosc-matlab-macos-x64
+          # macOS Intel is disabled: GitHub is retiring the macos-13
+          # runner (their only Intel image) and remaining capacity is
+          # effectively unusable on public repos -- jobs sit in the
+          # queue for hours or never pick up. Intel Mac users can
+          # `build` from source until we add a Rosetta-based Intel
+          # lane on the macos-14 runner (setup-matlab exposes an arch
+          # input that runs x86_64 MATLAB under Rosetta 2).
+          # - os: macos-13
+          #   mexext: mexmaci64
+          #   asset: blosc-matlab-macos-x64
           - os: ubuntu-24.04
             mexext: mexa64
             asset: blosc-matlab-linux-x64
