@@ -44,6 +44,15 @@ function build(options)
         '-DCMAKE_POLICY_VERSION_MINIMUM=3.5 ' ...
         '-DCMAKE_BUILD_TYPE=Release'], ...
         shellQuote(cbloscRoot), shellQuote(buildDir));
+    if isLinux()
+        % Belt-and-braces for the hand-written assembly c-blosc vendors
+        % (zstd's huf_decompress_amd64.S, which today does carry its own
+        % .note.GNU-stack): keep a future codec bump from silently
+        % reintroducing an exec-stack object. The -z noexecstack link
+        % flag below is what actually fixes the MEX; checkNoExecStack
+        % verifies it.
+        cmakeCmd = [cmakeCmd ' -DCMAKE_ASM_FLAGS=-Wa,--noexecstack'];
+    end
     runShell(cmakeCmd);
 
     buildCmd = sprintf('cmake --build %s --config Release --parallel', ...
@@ -91,6 +100,16 @@ function build(options)
         ['-I' fullfile(cbloscRoot, 'blosc')], ...
         fullfile(here, 'src', 'blosc_mex.c'), ...
         libPath};
+    if isLinux()
+        % Link with a non-executable stack. mex embeds a resource file
+        % (mw_mex_tempmex_bundle.zip) via -Wl,--format=binary; a raw
+        % binary input carries no .note.GNU-stack, so ld defaults the
+        % whole MEX to PT_GNU_STACK=RWE ("missing .note.GNU-stack
+        % section implies executable stack"). glibc >= 2.41 (Ubuntu
+        % 26.04+) then refuses to dlopen it: "cannot enable executable
+        % stack as shared object requires: Invalid argument".
+        mexArgs = [{'LDFLAGS=$LDFLAGS -Wl,-z,noexecstack'}, mexArgs];
+    end
     if options.Verbose
         mexArgs = ['-v', mexArgs];
     end
@@ -99,7 +118,46 @@ function build(options)
     % extra to pass here. Linux gets away without -lpthread since
     % blosc_compress_ctx uses only nthreads=1.
     mex(mexArgs{:});
-    fprintf('Built %s/blosc_mex.%s\n', outDir, mexext);
+    mexFile = fullfile(outDir, ['blosc_mex.' mexext]);
+    if isLinux()
+        checkNoExecStack(mexFile);
+    end
+    fprintf('Built %s\n', mexFile);
+end
+
+function tf = isLinux()
+    tf = isunix && ~ismac;
+end
+
+function checkNoExecStack(mexFile)
+%CHECKNOEXECSTACK Fail the build if the MEX asks for an executable stack.
+%   Newer glibc refuses to load shared objects whose PT_GNU_STACK
+%   program header is RWE, so a MEX built that way is broken on modern
+%   Linux even though it loads fine on the build machine.
+    [rc, out] = system(sprintf('readelf -lW %s', shellQuote(mexFile)));
+    if rc ~= 0
+        warning('blosc_matlab:build:NoReadelf', ...
+            'Could not run readelf to check GNU_STACK on %s:\n%s', ...
+            mexFile, out);
+        return;
+    end
+    line = regexp(out, '^\s*GNU_STACK[^\n]*', 'match', 'once', ...
+        'lineanchors');
+    if isempty(line)
+        error('blosc_matlab:build:NoGnuStack', ...
+            ['%s has no PT_GNU_STACK header; the loader would assume ' ...
+             'an executable stack.'], mexFile);
+    end
+    % Columns: Type Offset VirtAddr PhysAddr FileSiz MemSiz Flg Align.
+    % Flg can contain spaces ("R E"), so take everything between MemSiz
+    % and Align.
+    parts = strsplit(strtrim(line));
+    flags = strjoin(parts(7:end-1), '');
+    if ~strcmp(flags, 'RW')
+        error('blosc_matlab:build:ExecStack', ...
+            ['%s requests an executable stack (GNU_STACK must be RW):' ...
+             '\n%s'], mexFile, line);
+    end
 end
 
 function runShell(cmd)
