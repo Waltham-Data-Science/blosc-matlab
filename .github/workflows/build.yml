@@ -110,11 +110,12 @@ jobs:
           files: release/${{ matrix.asset }}.tar.gz
 
   # Load the Linux release payload (built on ubuntu-24.04 above, for
-  # glibc compatibility) on the newest Ubuntu image. This is the
-  # environment where an executable-stack MEX fails to dlopen.
-  test-linux-latest:
+  # glibc compatibility) on Ubuntu 26.04 (glibc 2.43). That is where an
+  # executable-stack MEX fails to dlopen; ubuntu-latest still resolves
+  # to 24.04 for some repos, so name the image explicitly.
+  test-linux-26-04:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check out (tests only)
         uses: actions/checkout@v4

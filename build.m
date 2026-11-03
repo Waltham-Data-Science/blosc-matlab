@@ -46,9 +46,11 @@ function build(options)
         shellQuote(cbloscRoot), shellQuote(buildDir));
     if isLinux()
         % Belt-and-braces for the hand-written assembly c-blosc vendors
-        % (zstd's huf_decompress_amd64.S): tell GNU as to emit a
-        % non-executable-stack note even if a source forgets its own
-        % .note.GNU-stack section. See checkNoExecStack below.
+        % (zstd's huf_decompress_amd64.S, which today does carry its own
+        % .note.GNU-stack): keep a future codec bump from silently
+        % reintroducing an exec-stack object. The -z noexecstack link
+        % flag below is what actually fixes the MEX; checkNoExecStack
+        % verifies it.
         cmakeCmd = [cmakeCmd ' -DCMAKE_ASM_FLAGS=-Wa,--noexecstack'];
     end
     runShell(cmakeCmd);
@@ -99,10 +101,13 @@ function build(options)
         fullfile(here, 'src', 'blosc_mex.c'), ...
         libPath};
     if isLinux()
-        % Link with a non-executable stack. Without this the MEX gets a
-        % PT_GNU_STACK header with RWE flags, and glibc >= 2.41 (Ubuntu
-        % 26.04 and later) refuses to dlopen it: "cannot enable
-        % executable stack as shared object requires: Invalid argument".
+        % Link with a non-executable stack. mex embeds a resource file
+        % (mw_mex_tempmex_bundle.zip) via -Wl,--format=binary; a raw
+        % binary input carries no .note.GNU-stack, so ld defaults the
+        % whole MEX to PT_GNU_STACK=RWE ("missing .note.GNU-stack
+        % section implies executable stack"). glibc >= 2.41 (Ubuntu
+        % 26.04+) then refuses to dlopen it: "cannot enable executable
+        % stack as shared object requires: Invalid argument".
         mexArgs = [{'LDFLAGS=$LDFLAGS -Wl,-z,noexecstack'}, mexArgs];
     end
     if options.Verbose
